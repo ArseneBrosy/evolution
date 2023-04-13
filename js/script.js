@@ -2,10 +2,14 @@ var canvas = document.getElementById("renderer");
 var ctx = canvas.getContext("2d");
 
 //#region CONSTANTES
+const GRAVITY_FORCE = 0.2;
+const GROUND_HEIGHT = 500;
+
 // couleures
 const c_background = "#8397FF";
 const c_dots = "red";
 const c_muscles = "black";
+const c_ground = "#07AB18";
 //#endregion
 
 //#region CREATURE
@@ -39,16 +43,18 @@ x, y, velocityX, velocityY
 ====[MUSCLES STRUCTURE]====
 dotA, dotB, lengthA, lengthB, lenghtAtime, clockOffest, force
 */
+
 creature.dots.push([0, 0, 0, 0]);
 creature.dots.push([40, 30, 0, 0]);
 creature.dots.push([0, 60, 0, 0, 0]);
-creature.dots.push([60, 60, 0, 0, 0]);
 creature.muscles.push([0, 1, 50, 70, 30, 0, 0.1]);
-creature.muscles.push([2, 1, 100, 150, 50, 10, 0.5]);
+creature.muscles.push([2, 1, 80, 50, 50, 10, 0.15]);
 creature.muscles.push([0, 2, 90, 40, 70, 5, 0.2]);
-creature.muscles.push([3, 2, 80, 130, 35, 31, 0.2]);
-creature.muscles.push([3, 1, 120, 70, 65, 21, 0.5]);
-creature.muscles.push([3, 0, 150, 100, 50, 52, 0.1]);
+
+/*
+creature.dots.push([0, 0, 0, 0, 0]);
+creature.dots.push([100, 0, 0, 0, 0]);
+creature.muscles.push([0, 1, 50, 100, 50, 0, 0.1]);*/
 //#endregion
 
 function loop() {
@@ -58,11 +64,6 @@ function loop() {
     }
 
     //#region MOVE CREATURE
-    // renit forces
-    for (var i = 0; i < creature.dots.length; i++) {
-        creature.dots[i][2] = 0;
-        creature.dots[i][3] = 0;
-    }
     // move clock
     creature.clock ++;
     if (creature.clock >= 100) {
@@ -76,8 +77,8 @@ function loop() {
         var xDir = xDis / disLenght;
         var yDir = yDis / disLenght;
         var i_len = (creature.clock + creature.muscles[i][5]) % 100 <= creature.muscles[i][4] ? 2 : 3;
-        var xForce = xDir * (creature.muscles[i][i_len] - disLenght) * creature.muscles[i][6];
-        var yForce = yDir * (creature.muscles[i][i_len] - disLenght) * creature.muscles[i][6];
+        var xForce = xDir * (creature.muscles[i][i_len] - disLenght) * creature.muscles[i][6] - creature.dots[creature.muscles[i][0]][2];
+        var yForce = yDir * (creature.muscles[i][i_len] - disLenght) * creature.muscles[i][6] - creature.dots[creature.muscles[i][0]][3];
         // dot a
         creature.dots[creature.muscles[i][0]][2] += xForce / 2;
         creature.dots[creature.muscles[i][0]][3] += yForce / 2;
@@ -86,6 +87,12 @@ function loop() {
         creature.dots[creature.muscles[i][1]][3] -= yForce / 2;
     }
     for (var i = 0; i < creature.dots.length; i++) {
+        // calc gravity
+        if (creature.dots[i][1] + creature.dots[i][3] <= GROUND_HEIGHT) {
+            creature.dots[i][3] += GRAVITY_FORCE;
+        } else {
+            creature.dots[i][3] = GROUND_HEIGHT - creature.dots[i][1];
+        }
         // move dots
         creature.dots[i][0] += creature.dots[i][2];
         creature.dots[i][1] += creature.dots[i][3];
@@ -99,6 +106,11 @@ function loop() {
     //#region FOND
     ctx.fillStyle = c_background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //#endregion
+    
+    //#region SOL
+    ctx.fillStyle = c_ground;
+    ctx.fillRect(0, camY + GROUND_HEIGHT + 10, canvas.width, canvas.height - camY);
     //#endregion
 
     //#region CREATURE
